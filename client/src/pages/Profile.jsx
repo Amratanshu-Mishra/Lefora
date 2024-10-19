@@ -8,6 +8,7 @@ import Footer from "../components/Footer";
 function Profile({ currentPage, handleNavClick }) {
   const { userId } = useParams(); // Gets the user ID from the URL
   const [user, setUser] = useState({ name: "", email: "" }); // State to store user data
+  const [orders, setOrders] = useState([]); // State to store user orders
   const [editing, setEditing] = useState(false); // State to track editing mode
   const [error, setError] = useState(""); // State for error handling
   const [loading, setLoading] = useState(true); // State for loading status
@@ -16,21 +17,29 @@ function Profile({ currentPage, handleNavClick }) {
   const [passwordError, setPasswordError] = useState(""); // State for password change error
   const [changingPassword, setChangingPassword] = useState(false); // State for password change mode
 
-  // Fetch user profile data when the component mounts
+  // Fetch user profile data and orders when the component mounts
   useEffect(() => {
     console.log("User ID from URL:", userId); // Log the ID
     const fetchUserProfile = async () => {
       if (userId) {
         // Check if ID is defined
         try {
+          // Fetch user profile
           const res = await axios.get(
             `http://localhost:3001/api/users/profile/${userId}`
-          ); // Update to match new route
+          );
           console.log("Fetched profile data:", res.data); // Log the profile data received
           setUser(res.data); // Set the user data
+
+          // Fetch user orders linked to the user
+          const ordersRes = await axios.get(
+            `http://localhost:3001/api/orders?userId=${userId}` // Updated endpoint with userId query parameter
+          );
+          console.log("Fetched user orders:", ordersRes.data); // Log the orders data
+          setOrders(ordersRes.data); // Set the user orders
         } catch (err) {
-          setError("Error fetching profile data. Please try again.");
-          console.error("Error fetching profile data", err);
+          setError("Error fetching profile or order data. Please try again.");
+          console.error("Error fetching profile or orders", err);
         } finally {
           setLoading(false);
         }
@@ -53,7 +62,7 @@ function Profile({ currentPage, handleNavClick }) {
       await axios.put(
         `http://localhost:3001/api/users/profile/${userId}`,
         user
-      ); // Update the PUT request to the correct endpoint
+      );
       alert("Profile updated successfully!");
       setEditing(false); // Exit editing mode after successful update
     } catch (err) {
@@ -66,7 +75,6 @@ function Profile({ currentPage, handleNavClick }) {
   const handleChangePassword = async (e) => {
     e.preventDefault(); // Prevents the form from refreshing the page
 
-    // You might want to implement some validation here
     if (!currentPassword || !newPassword) {
       setPasswordError("Both fields are required.");
       return;
@@ -76,11 +84,11 @@ function Profile({ currentPage, handleNavClick }) {
       const res = await axios.put(
         `http://localhost:3001/api/users/change-password/${userId}`,
         { currentPassword, newPassword }
-      ); // Update to match your backend route
+      );
       alert(res.data.message || "Password changed successfully!");
       setChangingPassword(false); // Exit changing password mode
     } catch (err) {
-      setPasswordError("Error changing password. Please try again."); // Error handling
+      setPasswordError("Error changing password. Please try again.");
       console.error("Error changing password", err);
     }
   };
@@ -98,14 +106,13 @@ function Profile({ currentPage, handleNavClick }) {
               {error && <div className="alert alert-danger">{error}</div>}{" "}
               {/* Display error if any */}
               {editing ? (
-                // Edit form for profile
                 <form onSubmit={handleUpdate} className="profile-form">
                   <div className="form-group">
                     <label htmlFor="name">Name:</label>
                     <input
                       type="text"
                       id="name"
-                      value={user.name} // Show the current user's name
+                      value={user.name}
                       onChange={(e) =>
                         setUser({ ...user, name: e.target.value })
                       }
@@ -117,11 +124,11 @@ function Profile({ currentPage, handleNavClick }) {
                     <input
                       type="email"
                       id="email"
-                      value={user.email} // Show the current user's email
+                      value={user.email}
                       onChange={(e) =>
                         setUser({ ...user, email: e.target.value })
-                      } // Update email in state
-                      required // Make the field required
+                      }
+                      required
                     />
                   </div>
 
@@ -196,7 +203,6 @@ function Profile({ currentPage, handleNavClick }) {
                   </div>
                 </form>
               ) : (
-                // Display user profile info
                 <div className="profile-info">
                   <p>
                     <strong>Name:</strong> {user.username}
@@ -213,6 +219,30 @@ function Profile({ currentPage, handleNavClick }) {
                 </div>
               )}
             </>
+          )}
+        </div>
+
+        {/* New Section for User's Orders */}
+        <div className="user-orders">
+          <h2>Your Orders</h2>
+          {orders.length > 0 ? (
+            orders.map((order) => (
+              <div key={order._id} className="order">
+                <p>
+                  <strong>Order ID:</strong> {order._id}
+                </p>
+                <p>
+                  <strong>Total Price:</strong> ${order.totalPrice}
+                </p>
+                <p>
+                  <strong>Date:</strong>{" "}
+                  {new Date(order.date).toLocaleDateString()}
+                </p>
+                {/* Add more details about the order as needed */}
+              </div>
+            ))
+          ) : (
+            <p>No orders found.</p>
           )}
         </div>
       </div>

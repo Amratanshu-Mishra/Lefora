@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import icon from "../assets/img/profile.png";
 import "./Navbar.css";
-//import logo from "../assets/img/lefora.jpeg";
+import { useAuth } from "../services/AuthContext"; // Import useAuth
 
 function Navbar({ currentPage, handleNavClick }) {
   const [loggedIn, setLoggedIn] = useState(false);
@@ -11,6 +11,7 @@ function Navbar({ currentPage, handleNavClick }) {
   const location = useLocation();
   const navigate = useNavigate();
   const dropdownRef = useRef(null); // Ref to track the dropdown
+  const { currentUser, logout } = useAuth(); // Destructure currentUser and logout from useAuth
 
   useEffect(() => {
     const isLoggedIn = localStorage.getItem("isLoggedIn");
@@ -37,10 +38,9 @@ function Navbar({ currentPage, handleNavClick }) {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("isLoggedIn");
-    localStorage.removeItem("email");
-    setLoggedIn(false);
-    navigate("/login");
+    logout(); // Use the logout function from AuthContext
+    setLoggedIn(false); // Clear the logged-in state
+    navigate("/"); // Optionally redirect to home or login page after logout
   };
 
   const handleProfileClick = () => {
@@ -87,7 +87,7 @@ function Navbar({ currentPage, handleNavClick }) {
         )}
 
         <div className="auth-section">
-          {loggedIn ? (
+          {loggedIn || currentUser ? ( // Check if logged in or currentUser is set
             <div className="profile" ref={dropdownRef}>
               <img
                 src={icon}

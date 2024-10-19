@@ -1,8 +1,8 @@
-// src/pages/LeforaShop.js
-import React, { useContext } from "react";
+import React, { useContext, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { CartContext } from "../services/CartContext"; // Import Cart Context
+import { useAuth } from "../services/AuthContext"; // Import useAuth to check if user is logged in
 import "./LeforaShop.css";
 import item1 from "../assets/img/item1.jpg";
 import item2 from "../assets/img/item2.jpg";
@@ -11,6 +11,12 @@ import item4 from "../assets/img/item4.jpg";
 
 const LeforaShop = ({ currentPage, handleNavClick }) => {
   const { addToCart } = useContext(CartContext); // Get addToCart function from context
+  const { currentUser } = useAuth(); // Get currentUser from Auth context
+
+  // Log currentUser to ensure it's being set correctly
+  useEffect(() => {
+    console.log("Current User:", currentUser); // Check the currentUser value
+  }, [currentUser]);
 
   const shopItems = [
     {
@@ -43,6 +49,16 @@ const LeforaShop = ({ currentPage, handleNavClick }) => {
     },
   ];
 
+  const handleAddToCart = (item) => {
+    if (currentUser) {
+      console.log("User is logged in, adding item to cart:", item);
+      addToCart(item); // Allow adding to cart if user is logged in
+    } else {
+      console.log("User is not logged in, cannot add item to cart.");
+      alert("You need to be logged in to add items to the cart.");
+    }
+  };
+
   return (
     <>
       <Navbar currentPage={currentPage} handleNavClick={handleNavClick} />
@@ -63,7 +79,7 @@ const LeforaShop = ({ currentPage, handleNavClick }) => {
                   <h3>{item.name}</h3>
                   <p>{item.description}</p>
                   <p>Price: Rs {item.price}</p>
-                  <button className="btn" onClick={() => addToCart(item)}>
+                  <button className="btn" onClick={() => handleAddToCart(item)}>
                     Add To Cart
                   </button>
                 </div>
