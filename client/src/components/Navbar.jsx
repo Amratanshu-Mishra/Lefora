@@ -5,7 +5,6 @@ import "./Navbar.css";
 import { useAuth } from "../services/AuthContext"; // Import useAuth
 
 function Navbar({ currentPage, handleNavClick }) {
-  const [loggedIn, setLoggedIn] = useState(false);
   const [email, setEmail] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const location = useLocation();
@@ -14,21 +13,18 @@ function Navbar({ currentPage, handleNavClick }) {
   const { currentUser, logout } = useAuth(); // Destructure currentUser and logout from useAuth
 
   useEffect(() => {
-    const isLoggedIn = localStorage.getItem("isLoggedIn");
-    const storedEmail = localStorage.getItem("email");
+    // Update loggedIn based on currentUser state
+    setEmail(currentUser?.email || ""); // Set email if currentUser is available
+  }, [currentUser]); // Depend on currentUser to update the email when user logs in/out
 
-    if (isLoggedIn) {
-      setLoggedIn(true);
-      setEmail(storedEmail);
+  // Event listener to close the dropdown if clicked outside
+  const handleOutsideClick = (event) => {
+    if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      setDropdownOpen(false); // Close dropdown if clicked outside
     }
+  };
 
-    // Event listener to close the dropdown if clicked outside
-    const handleOutsideClick = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setDropdownOpen(false); // Close dropdown if clicked outside
-      }
-    };
-
+  useEffect(() => {
     document.addEventListener("mousedown", handleOutsideClick);
 
     // Cleanup event listener
@@ -39,7 +35,8 @@ function Navbar({ currentPage, handleNavClick }) {
 
   const handleLogout = () => {
     logout(); // Use the logout function from AuthContext
-    setLoggedIn(false); // Clear the logged-in state
+    localStorage.removeItem("isLoggedIn"); // Clear logged-in state
+    localStorage.removeItem("email"); // Clear email state
     navigate("/"); // Optionally redirect to home or login page after logout
   };
 
@@ -47,6 +44,8 @@ function Navbar({ currentPage, handleNavClick }) {
     const userId = localStorage.getItem("userId"); // Retrieve user ID from localStorage
     navigate(`/profile/${userId}`);
   };
+
+  const loggedIn = !!currentUser; // Determine if the user is logged in based on currentUser
 
   return (
     <nav className="navbar">
@@ -87,7 +86,7 @@ function Navbar({ currentPage, handleNavClick }) {
         )}
 
         <div className="auth-section">
-          {loggedIn || currentUser ? ( // Check if logged in or currentUser is set
+          {loggedIn ? ( // Check if logged in or currentUser is set
             <div className="profile" ref={dropdownRef}>
               <img
                 src={icon}
