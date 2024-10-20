@@ -265,53 +265,78 @@ const CartPage = ({ currentPage, handleNavClick }) => {
                   />
                   Cash on Delivery
                 </label>
-              </div>
-              <button onClick={handleConfirmOrder}>Confirm Order</button>
-              {showPayPal && (
-                <PayPalScriptProvider
-                  options={{ "client-id": "YOUR_CLIENT_ID" }}
-                >
-                  <PayPalButtons
-                    createOrder={(data, actions) => {
-                      return actions.order.create({
-                        purchase_units: [
-                          {
-                            amount: {
-                              value: totalPrice.toString(),
-                            },
-                          },
-                        ],
-                      });
-                    }}
-                    onApprove={(data, actions) => {
-                      return actions.order
-                        .capture()
-                        .then(handleApprove(data.orderID));
-                    }}
+                <label>
+                  <input
+                    type="radio"
+                    name="payment"
+                    value="pos"
+                    onChange={handlePaymentChange}
                   />
-                </PayPalScriptProvider>
-              )}
+                  POS on Delivery
+                </label>
+              </div>
             </div>
           </div>
+
+          {/* Render PayPal Button only if confirmed */}
+          {showPayPal && paymentMethod === "online" && (
+            <PayPalScriptProvider
+              options={{
+                "client-id":
+                  "AeYhfs76JnTAGRATRI1bHoRPx4IbUCNiSj_e9pm54PYDpnjHgsS2BjJ2aOIV04AjUZLY0Kc3e6k9sfU7",
+                currency: "USD",
+              }}
+            >
+              <PayPalButtons
+                style={{ layout: "vertical" }}
+                createOrder={(data, actions) => {
+                  return actions.order.create({
+                    purchase_units: [
+                      {
+                        amount: {
+                          value: totalPrice.toFixed(2),
+                        },
+                      },
+                    ],
+                  });
+                }}
+                onApprove={(data, actions) => {
+                  return actions.order.capture().then((details) => {
+                    handleApprove(data.orderID);
+                  });
+                }}
+              />
+            </PayPalScriptProvider>
+          )}
         </div>
 
-        {/* Right Section - Cart Items */}
-        <div className="right-section">
-          <h2>Cart Items</h2>
-          {cartItems.map((item) => (
-            <div key={item.id} className="cart-item">
-              <div className="item-info">
-                <h4>{item.title}</h4>
-                <p>Price: ${item.price}</p>
-                <div className="item-quantity">
+        {/* Order Summary Section */}
+        <div className="right-section-container">
+          <h2>Order Summary</h2>
+          <div className="cart-items">
+            {cartItems.map((item) => (
+              <div key={item.id} className="cart-item">
+                <img
+                  src={item.img}
+                  alt={item.name}
+                  className="cart-item-image"
+                />
+                <span>{item.name}</span>
+                <span>
                   <button onClick={() => handleDecrement(item.id)}>-</button>
-                  <span>{item.quantity}</span>
+                  {item.quantity}
                   <button onClick={() => handleIncrement(item.id)}>+</button>
-                </div>
+                </span>
+                <span>${(item.price * item.quantity).toFixed(2)}</span>
               </div>
-            </div>
-          ))}
-          <h3>Total Price: ${totalPrice}</h3>
+            ))}
+          </div>
+          <div className="total-price">
+            <h3>Total: ${totalPrice.toFixed(2)}</h3>
+          </div>
+          <button className="checkout-btn" onClick={handleConfirmOrder}>
+            Proceed To Pay
+          </button>
         </div>
       </div>
     </>
