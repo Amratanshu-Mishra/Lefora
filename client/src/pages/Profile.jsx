@@ -1,80 +1,81 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
-import "./profile.css";
+import {
+  FiEdit,
+  FiSave,
+  FiX,
+  FiLock,
+  FiPackage,
+  FiChevronDown,
+  FiChevronUp,
+} from "react-icons/fi";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import "./profile.css";
 
-function Profile({ currentPage, handleNavClick }) {
-  const { userId } = useParams(); // Gets the user ID from the URL
-  const [user, setUser] = useState({ name: "", email: "" }); // State to store user data
-  const [orders, setOrders] = useState([]); // State to store user orders
-  const [editing, setEditing] = useState(false); // State to track editing mode
-  const [error, setError] = useState(""); // State for error handling
-  const [loading, setLoading] = useState(true); // State for loading status
-  const [currentPassword, setCurrentPassword] = useState(""); // State for current password
-  const [newPassword, setNewPassword] = useState(""); // State for new password
-  const [passwordError, setPasswordError] = useState(""); // State for password change error
-  const [changingPassword, setChangingPassword] = useState(false); // State for password change mode
+export default function Profile({ currentPage, handleNavClick }) {
+  const { userId } = useParams();
+  const [user, setUser] = useState({ name: "", email: "", username: "" });
+  const [orders, setOrders] = useState([]);
+  const [editing, setEditing] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [expandedOrder, setExpandedOrder] = useState(null);
 
-  // Fetch user profile data and orders when the component mounts
   useEffect(() => {
-    console.log("User ID from URL:", userId); // Log the ID
-    const fetchUserProfile = async () => {
-      if (userId) {
-        // Check if ID is defined
-        try {
-          // Fetch user profile
-          const res = await axios.get(
-            `http://localhost:3001/api/users/profile/${userId}`
-          );
-          console.log("Fetched profile data:", res.data); // Log the profile data received
-          setUser(res.data); // Set the user data
+    const fetchUserProfileAndOrders = async () => {
+      if (!userId) {
+        setError("User ID is not defined.");
+        setLoading(false);
+        return;
+      }
 
-          // Fetch user orders linked to the user
-          const ordersRes = await axios.get(
-            `http://localhost:3001/api/orders?userId=${userId}` // Updated endpoint with userId query parameter
-          );
-          console.log("Fetched user orders:", ordersRes.data); // Log the orders data
-          setOrders(ordersRes.data); // Set the user orders
-        } catch (err) {
-          setError("Error fetching profile or order data. Please try again.");
-          console.error("Error fetching profile or orders", err);
-        } finally {
-          setLoading(false);
-        }
-      } else {
-        setError("User ID is not defined."); // Handle undefined ID
+      try {
+        setLoading(true);
+        setError("");
+
+        const userResponse = await axios.get(
+          `http://localhost:3001/api/users/profile/${userId}`
+        );
+        setUser(userResponse.data);
+
+        const ordersResponse = await axios.get(
+          `http://localhost:3001/api/orders/user/${userId}`
+        );
+        setOrders(ordersResponse.data.orders);
+      } catch (err) {
+        setError("Error fetching profile or order data. Please try again.");
+        console.error("Error fetching profile or orders", err);
+      } finally {
         setLoading(false);
       }
     };
 
-    fetchUserProfile();
+    fetchUserProfileAndOrders();
   }, [userId]);
 
-  // Handle profile update (PUT request)
   const handleUpdate = async (e) => {
-    e.preventDefault(); // Prevents the form from refreshing the page
-
-    console.log("User data to update:", user); // Log the user data before sending the update request
-
+    e.preventDefault();
     try {
       await axios.put(
         `http://localhost:3001/api/users/profile/${userId}`,
         user
       );
       alert("Profile updated successfully!");
-      setEditing(false); // Exit editing mode after successful update
+      setEditing(false);
     } catch (err) {
-      setError("Error updating profile. Please try again."); // Error handling
+      setError("Error updating profile. Please try again.");
       console.error("Error updating profile", err);
     }
   };
 
-  // Handle password change
   const handleChangePassword = async (e) => {
-    e.preventDefault(); // Prevents the form from refreshing the page
-
+    e.preventDefault();
     if (!currentPassword || !newPassword) {
       setPasswordError("Both fields are required.");
       return;
@@ -86,28 +87,31 @@ function Profile({ currentPage, handleNavClick }) {
         { currentPassword, newPassword }
       );
       alert(res.data.message || "Password changed successfully!");
-      setChangingPassword(false); // Exit changing password mode
+      setChangingPassword(false);
     } catch (err) {
       setPasswordError("Error changing password. Please try again.");
       console.error("Error changing password", err);
     }
   };
 
+  const toggleOrder = (orderId) => {
+    setExpandedOrder(expandedOrder === orderId ? null : orderId);
+  };
+
   return (
     <>
       <Navbar currentPage={currentPage} handleNavClick={handleNavClick} />
       <div className="profile-container">
-        <div className="profile-card">
-          <h1>Profile</h1>
+        <div className="profile-info">
+          <h2 className="text-xl font-bold">Profile</h2>
           {loading ? (
-            <p>Loading...</p> // Loading state
+            <p>Loading...</p>
           ) : (
             <>
-              {error && <div className="alert alert-danger">{error}</div>}{" "}
-              {/* Display error if any */}
+              {error && <div className="text-red-500 mb-4">{error}</div>}
               {editing ? (
-                <form onSubmit={handleUpdate} className="profile-form">
-                  <div className="form-group">
+                <form onSubmit={handleUpdate} className="space-y-4">
+                  <div>
                     <label htmlFor="name">Name:</label>
                     <input
                       type="text"
@@ -116,10 +120,10 @@ function Profile({ currentPage, handleNavClick }) {
                       onChange={(e) =>
                         setUser({ ...user, name: e.target.value })
                       }
+                      className="border rounded p-2 w-full"
                     />
                   </div>
-
-                  <div className="form-group">
+                  <div>
                     <label htmlFor="email">Email:</label>
                     <input
                       type="email"
@@ -129,81 +133,27 @@ function Profile({ currentPage, handleNavClick }) {
                         setUser({ ...user, email: e.target.value })
                       }
                       required
+                      className="border rounded p-2 w-full"
                     />
                   </div>
-
-                  <button type="submit" className="btn save-btn">
-                    Save
-                  </button>
-                  <button
-                    type="button"
-                    className="btn cancel-btn"
-                    onClick={() => setEditing(false)}
-                  >
-                    Cancel
-                  </button>
-
-                  {/* Change Password Section */}
-                  <div className="change-password-section">
-                    <h2>Change Password</h2>
-                    {changingPassword ? (
-                      <form
-                        onSubmit={handleChangePassword}
-                        className="change-password-form"
-                      >
-                        <div className="form-group">
-                          <label htmlFor="currentPassword">
-                            Current Password:
-                          </label>
-                          <input
-                            type="password"
-                            id="currentPassword"
-                            value={currentPassword}
-                            onChange={(e) => setCurrentPassword(e.target.value)}
-                            required
-                          />
-                        </div>
-                        <div className="form-group">
-                          <label htmlFor="newPassword">New Password:</label>
-                          <input
-                            type="password"
-                            id="newPassword"
-                            value={newPassword}
-                            onChange={(e) => setNewPassword(e.target.value)}
-                            required
-                          />
-                        </div>
-                        <button
-                          type="submit"
-                          className="btn change-password-btn"
-                        >
-                          Change Password
-                        </button>
-                        <button
-                          type="button"
-                          className="btn cancel-btn"
-                          onClick={() => setChangingPassword(false)}
-                        >
-                          Cancel
-                        </button>
-                        {passwordError && (
-                          <div className="alert alert-danger">
-                            {passwordError}
-                          </div>
-                        )}
-                      </form>
-                    ) : (
-                      <button
-                        onClick={() => setChangingPassword(true)}
-                        className="btn change-password-btn"
-                      >
-                        Change Password
-                      </button>
-                    )}
+                  <div className="flex space-x-2">
+                    <button
+                      type="submit"
+                      className="bg-blue-500 text-white p-2 rounded"
+                    >
+                      <FiSave className="mr-2" /> Save
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEditing(false)}
+                      className="border rounded p-2"
+                    >
+                      <FiX className="mr-2" /> Cancel
+                    </button>
                   </div>
                 </form>
               ) : (
-                <div className="profile-info">
+                <div className="space-y-2">
                   <p>
                     <strong>Name:</strong> {user.username}
                   </p>
@@ -212,33 +162,140 @@ function Profile({ currentPage, handleNavClick }) {
                   </p>
                   <button
                     onClick={() => setEditing(true)}
-                    className="btn edit-btn"
+                    className="bg-blue-500 text-white p-2 rounded"
                   >
-                    Edit Profile
+                    <FiEdit className="mr-2" /> Edit Profile
                   </button>
                 </div>
               )}
+              <div className="mt-8">
+                <h2 className="text-xl font-semibold mb-4">Change Password</h2>
+                {changingPassword ? (
+                  <form onSubmit={handleChangePassword} className="space-y-4">
+                    <div>
+                      <label htmlFor="currentPassword">Current Password:</label>
+                      <input
+                        type="password"
+                        id="currentPassword"
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                        required
+                        className="border rounded p-2 w-full"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="newPassword">New Password:</label>
+                      <input
+                        type="password"
+                        id="newPassword"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        required
+                        className="border rounded p-2 w-full"
+                      />
+                    </div>
+                    <div className="flex space-x-2">
+                      <button
+                        type="submit"
+                        className="bg-blue-500 text-white p-2 rounded"
+                      >
+                        <FiLock className="mr-2" /> Change Password
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setChangingPassword(false)}
+                        className="border rounded p-2"
+                      >
+                        <FiX className="mr-2" /> Cancel
+                      </button>
+                    </div>
+                    {passwordError && (
+                      <div className="text-red-500 mt-2">{passwordError}</div>
+                    )}
+                  </form>
+                ) : (
+                  <button
+                    onClick={() => setChangingPassword(true)}
+                    className="bg-blue-500 text-white p-2 rounded"
+                  >
+                    <FiLock className="mr-2" /> Change Password
+                  </button>
+                )}
+              </div>
             </>
           )}
         </div>
 
-        {/* New Section for User's Orders */}
+        {/* Middle Section for Posts */}
+        <div className="posts-section" style={{ flex: "1", margin: "0 20px" }}>
+          <h2 className="text-2xl font-bold mb-6">Your Posts</h2>
+          <p>No posts found.</p>
+        </div>
+
         <div className="user-orders">
-          <h2>Your Orders</h2>
+          <h2 className="text-2xl font-bold mb-6">Your Orders</h2>
           {orders.length > 0 ? (
             orders.map((order) => (
-              <div key={order._id} className="order">
-                <p>
-                  <strong>Order ID:</strong> {order._id}
-                </p>
-                <p>
-                  <strong>Total Price:</strong> ${order.totalPrice}
-                </p>
-                <p>
-                  <strong>Date:</strong>{" "}
-                  {new Date(order.date).toLocaleDateString()}
-                </p>
-                {/* Add more details about the order as needed */}
+              <div key={order._id} className="border p-4 mb-4 rounded shadow">
+                <div
+                  className="cursor-pointer"
+                  onClick={() => toggleOrder(order._id)}
+                >
+                  <h3 className="flex items-center justify-between">
+                    <span className="flex items-center space-x-2">
+                      <FiPackage className="h-5 w-5" />
+                      <span>
+                        {order.items.length > 0
+                          ? order.items[0].name
+                          : "Unnamed Order"}
+                      </span>
+                    </span>
+                    <span>
+                      {expandedOrder === order._id ? (
+                        <FiChevronUp className="h-4 w-4" />
+                      ) : (
+                        <FiChevronDown className="h-4 w-4" />
+                      )}
+                    </span>
+                  </h3>
+                </div>
+                {expandedOrder === order._id && (
+                  <div className="mt-4">
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <p className="text-sm text-muted-foreground">
+                          Total Price
+                        </p>
+                        <p className="font-semibold">
+                          ${order.totalPrice.toFixed(2)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">
+                          Order Date
+                        </p>
+                        <p className="font-semibold">
+                          {new Date(order.date).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                    <h4 className="font-semibold">Items:</h4>
+                    <ul>
+                      {order.items.map((item, index) => (
+                        <li key={index} className="flex items-center mb-2">
+                          <img
+                            src={item.img} // Ensure your item object has imageUrl property
+                            alt={item.name}
+                            className="cart-item-image" // Adjust size and styles as needed
+                          />
+                          <span>
+                            {item.name} - ${item.price.toFixed(2)}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
             ))
           ) : (
@@ -246,9 +303,7 @@ function Profile({ currentPage, handleNavClick }) {
           )}
         </div>
       </div>
-      <Footer />
+      <Footer className="fot" />
     </>
   );
 }
-
-export default Profile;
