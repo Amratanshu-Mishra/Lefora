@@ -4,16 +4,17 @@ import icon from "../assets/img/profile.png";
 import "./Navbar.css";
 import { useAuth } from "../services/AuthContext"; // Import useAuth
 
-function Navbar({ currentPage, handleNavClick }) {
+function Navbar({ currentPage }) {
   const [email, setEmail] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState(""); // State for search query
   const location = useLocation();
   const navigate = useNavigate();
   const dropdownRef = useRef(null); // Ref to track the dropdown
   const { currentUser, logout } = useAuth(); // Destructure currentUser and logout from useAuth
 
   useEffect(() => {
-    // Update loggedIn based on currentUser state
+    // Update email based on currentUser state
     setEmail(currentUser?.email || ""); // Set email if currentUser is available
   }, [currentUser]); // Depend on currentUser to update the email when user logs in/out
 
@@ -47,6 +48,15 @@ function Navbar({ currentPage, handleNavClick }) {
 
   const loggedIn = !!currentUser; // Determine if the user is logged in based on currentUser
 
+  // Function to handle search submission
+  const handleSearch = (e) => {
+    e.preventDefault(); // Prevent the default form submission
+    if (searchQuery.trim()) {
+      navigate(`/search?query=${searchQuery.trim()}`); // Navigate to search results page
+      setSearchQuery(""); // Clear the search input
+    }
+  };
+
   return (
     <nav className="navbar">
       <div className="logo">
@@ -58,9 +68,17 @@ function Navbar({ currentPage, handleNavClick }) {
       {/* Search Container for Centering */}
       {location.pathname === "/" && (
         <div className="search-container">
-          <div className="search-bar">
-            <input type="text" placeholder="Search topics..." />
-          </div>
+          <form onSubmit={handleSearch} className="search-bar">
+            <input
+              type="text"
+              placeholder="Search topics..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)} // Update search query state
+            />
+            <button type="submit" className="search-button">
+              Search
+            </button>
+          </form>
         </div>
       )}
 

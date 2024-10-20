@@ -1,0 +1,47 @@
+/* SearchResults.css */
+.search-results-container {
+  padding: 20px;
+  align-items: center;
+}
+
+.results-list {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px; /* Space between cards */
+  flex-direction: column;
+}
+
+.result-item {
+  background: #ffffff; /* White background for cards */
+  border: 1px solid #dddddd; /* Light gray border */
+  border-radius: 8px; /* Rounded corners */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+  width: 300px; /* Fixed width for cards */
+  overflow: hidden; /* Prevent overflow */
+  transition: transform 0.3s; /* Smooth transform on hover */
+}
+
+.result-item:hover {
+  transform: scale(1.02); /* Slightly scale up on hover */
+}
+
+.result-link {
+  text-decoration: none; /* Remove underline from links */
+  color: inherit; /* Use parent color */
+  display: block; /* Make the entire item clickable */
+  padding: 10px; /* Add padding inside card */
+}
+
+.result-image {
+  width: 100%; /* Make image responsive */
+  height: auto; /* Maintain aspect ratio */
+}
+
+.result-title {
+  font-size: 1.2em; /* Increase font size for title */
+  margin-top: 10px; /* Space above title */
+  font-weight: bold; /* Make title bold */
+  text-align: center; /* Center align the title */
+}

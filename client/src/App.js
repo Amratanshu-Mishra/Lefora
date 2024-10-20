@@ -14,6 +14,7 @@ import { CartProvider } from "./services/CartContext";
 import ThankYouPage from "./pages/ThankYouPage";
 import AboutUs from "./pages/AboutUs";
 import ContactUs from "./pages/ContactUs";
+import SearchResults from "./components/SearchResults";
 
 function App() {
   const [data, setData] = useState(null);
@@ -114,6 +115,7 @@ function App() {
             <Route path="/thankYou" element={<ThankYouPage />} />
             <Route path="/aboutUs" element={<AboutUs />} />
             <Route path="/contactUs" element={<ContactUs />} />
+            <Route path="/search" element={<SearchResults />} />
           </Routes>
         </Router>
       </CartProvider>

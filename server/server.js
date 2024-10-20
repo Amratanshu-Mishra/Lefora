@@ -13,6 +13,7 @@ const fs = require("fs");
 const User = require("./models/userModels"); // Ensure correct path to user model
 const orderRoutes = require("./routes/orderRoutes");
 const emailRoutes = require("./routes/emailRoutes");
+const searchRoutes = require("./routes/search");
 
 // Create uploads directory if it doesn't exist
 const uploadsDir = path.join(__dirname, "uploads");
@@ -29,6 +30,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/posts", postRoute);
 app.use("/api/orders", orderRoutes);
 app.use("/api", emailRoutes); // Use '/api' prefix for email routes
+app.use("/api", searchRoutes);
 // Setup Multer for multiple image uploads
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
