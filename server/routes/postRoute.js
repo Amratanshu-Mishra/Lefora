@@ -1,4 +1,3 @@
-//postRoute
 const express = require("express");
 const multer = require("multer");
 const router = express.Router();
@@ -113,22 +112,39 @@ router.post("/:id/toggle-like", async (req, res) => {
   }
 });
 
+// PUT route to edit a post
+// PUT route to edit a post
+router.put("/:id", upload, async (req, res) => {
+  const { title, content } = req.body;
+
+  try {
+    // Find the post by ID
+    const post = await Post.findById(req.params.id);
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    // Retain existing images unless new ones are uploaded
+    const images = req.files ? req.files.map((file) => file.path) : post.images;
+
+    // Update post with new title, content, and images
+    const updatedPost = await Post.findByIdAndUpdate(
+      req.params.id,
+      { title, content, images }, // Update with new images if provided, else keep existing
+      { new: true, runValidators: true } // Return the updated post and run validators
+    );
+
+    // Send the updated post back as a response
+    res
+      .status(200)
+      .json({ message: "Post updated successfully", post: updatedPost });
+  } catch (error) {
+    console.error("Error updating post:", error);
+    res.status(500).json({ message: "Server error", error });
+  }
+});
+
 // DELETE a post by ID
-// router.delete("/:id", async (req, res) => {
-//   try {
-//     const post = await Post.findByIdAndDelete(req.params.id); // Find and delete post by ID
-//     if (!post) {
-//       return res.status(404).json({ message: "Post not found" }); // Return 404 if post not found
-//     }
-//     res.status(200).json({ message: "Post deleted successfully" });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ message: "Failed to delete post" });
-//   }
-// });
-
-//delete postROute
-
 router.delete("/:id", async (req, res) => {
   const postId = req.params.id;
   console.log("Received post ID:", postId); // Log the received ID
