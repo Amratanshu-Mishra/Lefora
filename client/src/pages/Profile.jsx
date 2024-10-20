@@ -240,7 +240,7 @@ export default function Profile({ currentPage, handleNavClick }) {
 
         {/* Middle Section for Posts */}
         <div className="posts-section" style={{ flex: "1", margin: "0 20px" }}>
-          <h2 className="text-2xl font-bold mb-6">Your Posts</h2>
+          <h1 className="text-2xl font-bold mb-6">Your Posts</h1>
           {posts.length > 0 ? (
             posts
               .slice()

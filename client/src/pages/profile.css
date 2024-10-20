@@ -17,6 +17,7 @@
   padding: 15px; /* Padding for inner content */
   background-color: #f9f9f9; /* Light background color */
   margin-right: 20px; /* Add margin to the right for spacing */
+  height: fit-content;
 }
 
 /* Orders Section */
@@ -25,6 +26,7 @@
   border: 1px solid #ddd; /* Light gray border */
   border-radius: 8px; /* Rounded corners */
   padding: 15px; /* Padding for inner content */
+  height: fit-content;
 }
 
 /* Responsive Styles */
@@ -48,6 +50,7 @@
   padding: 15px; /* Padding for inner content */
   background-color: #f9f9f9; /* Optional background color */
   width: 60%;
+  height: fit-content;
 }
 .fot {
   margin-top: auto;
