@@ -136,7 +136,6 @@ export default function ContactUs() {
           </form>
         </main>
       </div>
-      <ContactUs />
       <Footer />
     </>
   );
