@@ -9,7 +9,7 @@ export default function AboutUs() {
     { name: "Amratanshu Mishra", role: "Lead Full Stack Developer" },
     { name: "Govind Kumar Kalvar", role: "Database & Deployment Overseer" },
     { name: "Bakhtyar Ansari", role: "UI/UX Designer & Frontend Developer" },
-    { name: "Divyansh Pathak", role: "Technical Documentation Lead" },
+    { name: "Divyansh Pathak", role: "Quality Assurance Engineer" },
     { name: "Gourav Kumar Panday", role: "Technical Documentation Lead" },
   ];
   const navigate = useNavigate();

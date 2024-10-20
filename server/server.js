@@ -1,4 +1,3 @@
-//server.js
 require("dotenv").config();
 const express = require("express");
 const app = express();
@@ -7,94 +6,84 @@ const mongoose = require("mongoose");
 const userRoutes = require("./routes/userRoutes");
 const postRoute = require("./routes/postRoute");
 const cors = require("cors");
-const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
-const User = require("./models/userModels"); // Ensure correct path to user model
 const orderRoutes = require("./routes/orderRoutes");
 const emailRoutes = require("./routes/emailRoutes");
 const searchRoutes = require("./routes/search");
 
-// Create uploads directory if it doesn't exist
+// Ensure uploads directory exists
 const uploadsDir = path.join(__dirname, "uploads");
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir);
 }
 
-// Middleware to parse JSON
-app.use(cors()); // Enable CORS for all routes
+// Middleware to parse JSON and handle CORS
+app.use(cors()); // Consider limiting to specific origins in production
 app.use(express.json());
-
-// Use the user routes
-app.use("/api/users", userRoutes);
-app.use("/api/posts", postRoute);
-app.use("/api/orders", orderRoutes);
-app.use("/api", emailRoutes); // Use '/api' prefix for email routes
-app.use("/api", searchRoutes);
-// Setup Multer for multiple image uploads
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "uploads/"); // Directory to store uploaded images
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + "-" + file.originalname); // Generate a unique filename for each file
-  },
-});
-
-const upload = multer({ storage: storage });
 
 // Serve static files from the uploads folder
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// Connect to MongoDB
+// Use routes
+app.use("/api/users", userRoutes);
+app.use("/api/posts", postRoute);
+app.use("/api/orders", orderRoutes);
+app.use("/api", emailRoutes);
+app.use("/api", searchRoutes);
+
+// Connect to MongoDB with error handling
+if (!process.env.MONGO_URI) {
+  console.error("Error: MONGO_URI is not set in the environment variables.");
+  process.exit(1); // Exit the application if MONGO_URI is not set
+}
+
 mongoose
-  .connect(process.env.MONGO_URI)
+  .connect(process.env.MONGO_URI, {})
   .then(() => {
     console.log("Connected to MongoDB");
   })
-  .catch((err) => console.error("Could not connect to MongoDB", err));
+  .catch((err) => {
+    console.error("Could not connect to MongoDB:", err);
+    process.exit(1); // Exit the application if MongoDB connection fails
+  });
 
-// Add a new route for handling multiple file uploads
-app.post("/upload-multiple", upload.array("images", 5), (req, res) => {
-  if (!req.files) {
-    return res.status(400).json({ message: "No files were uploaded." });
-  }
-  try {
+// Handle MongoDB connection events for disconnection, reconnection, etc.
+mongoose.connection.on("disconnected", () => {
+  console.warn("MongoDB disconnected.");
+});
+mongoose.connection.on("reconnected", () => {
+  console.info("MongoDB reconnected.");
+});
+
+// Add a new route for handling multiple file uploads (if needed separately)
+app.post("/upload-multiple", async (req, res) => {
+  const upload = multer({
+    storage: multer.diskStorage({
+      destination: (req, file, cb) => cb(null, "uploads/"),
+      filename: (req, file, cb) =>
+        cb(null, Date.now() + "-" + file.originalname),
+    }),
+  }).array("images", 5);
+
+  upload(req, res, (err) => {
+    if (err) {
+      console.error("Multer error:", err);
+      return res
+        .status(500)
+        .json({ message: "Failed to upload files", error: err.message });
+    }
+
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ message: "No files were uploaded." });
+    }
+
     const filePaths = req.files.map((file) => file.path);
     res
       .status(200)
       .json({ message: "Files uploaded successfully", files: filePaths });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Failed to upload files" });
-  }
+  });
 });
-// execute bash file
-// Email sending route
-// app.post("/send-email", (req, res) => {
-//   const { message } = req.body;
-
-//   // Validate that message is provided
-//   if (!message) {
-//     return res.status(400).send("Message is required");
-//   }
-
-//   // Execute the bash script and pass the message as an argument
-//   exec(`bash email.sh "${message}"`, (error, stdout, stderr) => {
-//     if (error) {
-//       console.error(`Error executing script: ${error.message}`);
-//       return res.status(500).send("Error executing script");
-//     }
-
-//     if (stderr) {
-//       console.error(`Script stderr: ${stderr}`);
-//       return res.status(500).send("Error in script execution");
-//     }
-
-//     console.log(`Script stdout: ${stdout}`);
-//     res.send("Email sent successfully!");
-//   });
-// });
 
 // Define a sample route to test the server
 app.get("/", (req, res) => {

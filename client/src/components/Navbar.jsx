@@ -75,9 +75,9 @@ function Navbar({ currentPage }) {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)} // Update search query state
             />
-            <button type="submit" className="search-button">
+            {/* <button type="submit" className="search-button">
               Search
-            </button>
+            </button> */}
           </form>
         </div>
       )}

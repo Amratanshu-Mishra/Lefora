@@ -26,9 +26,10 @@ export default function Profile({ currentPage, handleNavClick }) {
   const [passwordError, setPasswordError] = useState("");
   const [changingPassword, setChangingPassword] = useState(false);
   const [expandedOrder, setExpandedOrder] = useState(null);
+  const [posts, setPosts] = useState([]);
 
   useEffect(() => {
-    const fetchUserProfileAndOrders = async () => {
+    const fetchUserProfileAndOrdersAndPosts = async () => {
       if (!userId) {
         setError("User ID is not defined.");
         setLoading(false);
@@ -39,24 +40,35 @@ export default function Profile({ currentPage, handleNavClick }) {
         setLoading(true);
         setError("");
 
+        // Fetch user profile
         const userResponse = await axios.get(
           `http://localhost:3001/api/users/profile/${userId}`
         );
-        setUser(userResponse.data);
+        const user = userResponse.data;
+        setUser(user);
 
+        // Fetch user orders
         const ordersResponse = await axios.get(
           `http://localhost:3001/api/orders/user/${userId}`
         );
         setOrders(ordersResponse.data.orders);
+
+        // Fetch user posts using the author field (assume it's username or email)
+        const postsResponse = await axios.get(
+          `http://localhost:3001/api/posts/author/${user.username}` // or use `user.email` if author is based on email
+        );
+        setPosts(postsResponse.data); // Assuming response.data contains the list of posts
       } catch (err) {
-        setError("Error fetching profile or order data. Please try again.");
-        console.error("Error fetching profile or orders", err);
+        setError(
+          "Error fetching profile, orders, or posts data. Please try again."
+        );
+        console.error("Error fetching profile, orders, or posts", err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchUserProfileAndOrders();
+    fetchUserProfileAndOrdersAndPosts();
   }, [userId]);
 
   const handleUpdate = async (e) => {
@@ -229,7 +241,37 @@ export default function Profile({ currentPage, handleNavClick }) {
         {/* Middle Section for Posts */}
         <div className="posts-section" style={{ flex: "1", margin: "0 20px" }}>
           <h2 className="text-2xl font-bold mb-6">Your Posts</h2>
-          <p>No posts found.</p>
+          {posts.length > 0 ? (
+            posts
+              .slice()
+              .reverse()
+              .map((post) => (
+                <div key={post._id} className="post-item">
+                  <h3 className="text-xl font-semibold">{post.title}</h3>
+                  <p>{post.content}</p>
+
+                  {/* Display post images if they exist */}
+                  {post.images && post.images.length > 0 && (
+                    <div className="post-images">
+                      {post.images.map((image, index) => (
+                        <img
+                          key={index}
+                          src={`http://localhost:3001/${image}`}
+                          alt=""
+                          className="post-image"
+                        />
+                      ))}
+                    </div>
+                  )}
+
+                  <span className="text-sm text-gray-500">
+                    Posted on: {new Date(post.createdAt).toLocaleDateString()}
+                  </span>
+                </div>
+              ))
+          ) : (
+            <p>No posts found.</p>
+          )}
         </div>
 
         <div className="user-orders">
@@ -278,15 +320,25 @@ export default function Profile({ currentPage, handleNavClick }) {
                           {new Date(order.date).toLocaleDateString()}
                         </p>
                       </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">
+                          Delivery Date
+                        </p>
+                        <p className="font-semibold">
+                          {order.scheduleDate
+                            ? new Date(order.scheduleDate).toLocaleDateString()
+                            : "No schedule date set"}
+                        </p>
+                      </div>
                     </div>
                     <h4 className="font-semibold">Items:</h4>
                     <ul>
                       {order.items.map((item, index) => (
                         <li key={index} className="flex items-center mb-2">
                           <img
-                            src={item.img} // Ensure your item object has imageUrl property
+                            src={item.img}
                             alt={item.name}
-                            className="cart-item-image" // Adjust size and styles as needed
+                            className="cart-item-image"
                           />
                           <span>
                             {item.name} - ${item.price.toFixed(2)}
