@@ -66,7 +66,7 @@ function Navbar({ currentPage }) {
       </div>
 
       {/* Search Container for Centering */}
-      {location.pathname === "/" && (
+      {(location.pathname === "/" || location.pathname === "/search") && (
         <div className="search-container">
           <form onSubmit={handleSearch} className="search-bar">
             <input

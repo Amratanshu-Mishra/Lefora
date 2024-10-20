@@ -265,15 +265,6 @@ const CartPage = ({ currentPage, handleNavClick }) => {
                   />
                   Cash on Delivery
                 </label>
-                <label>
-                  <input
-                    type="radio"
-                    name="payment"
-                    value="pos"
-                    onChange={handlePaymentChange}
-                  />
-                  POS on Delivery
-                </label>
               </div>
             </div>
           </div>
